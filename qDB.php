@@ -1,7 +1,7 @@
 <?php
 
-include "PDOWrapper.php";
-include "QueryBuilder.php";
+require_once("PDOWrapper.php");
+require_once("QueryBuilder.php");
 
 /**
  * qDB is an implementation class of PDOWrapper and QueryBuilder
@@ -51,5 +51,8 @@ class qDB
     }
 
 
+    public static function Query($query, $param_binds = [])
+    {
+        return static::Instance()->pdoInstance()->query($query,$param_binds);
+    }
 }
-

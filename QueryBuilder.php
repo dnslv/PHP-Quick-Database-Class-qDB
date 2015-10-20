@@ -95,7 +95,7 @@ class QueryBuilder
      * @param bool|false $is_distinct
      * @return $this
      */
-    public function select($select_what, $is_distinct = false)
+    public function select($select_what = "*", $is_distinct = false)
     {
         #Set query action
         if ($is_distinct) {
@@ -441,6 +441,11 @@ class QueryBuilder
             return false;
 
         }
+    }
+
+    public function pdoInstance()
+    {
+        return $this->pdo;
     }
 
     ###################

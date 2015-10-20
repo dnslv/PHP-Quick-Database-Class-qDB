@@ -110,8 +110,6 @@ class PDOWrapper
             }
         }
 
-        var_dump($query, $parameters);
-
         try {
             # Prepare query
             $this->sQuery = $this->pdo->prepare($query);
@@ -138,11 +136,12 @@ class PDOWrapper
                             $type = PDO::PARAM_STR;
                     }
 
+
                     $this->sQuery->bindValue(":" . $param, $value, $type);
                 }
             }
             # Execute SQL
-            print $x = $this->sQuery->execute();
+            $x = $this->sQuery->execute();
 
         } catch (PDOException $e) {
 
@@ -166,7 +165,8 @@ class PDOWrapper
      */
     public function bind($para, $value)
     {
-        $this->parameters[$para] = $value;
+        $nparam = $this->prepParam($para);
+        $this->parameters[$nparam] = $value;
     }
 
     /**
@@ -237,6 +237,26 @@ class PDOWrapper
     public function lastInsertId()
     {
         return $this->pdo->lastInsertId();
+    }
+
+    /**
+     * Checks if parameter is duplicated in the bind array. If yes, creates an unique name.
+     * @param $param
+     * @return mixed
+     */
+    private function prepParam($param)
+    {
+        if (array_key_exists($param, $this->parameters)) {
+
+            $new_param = $param . rand(1, 9);
+
+            return $this->prepParam($new_param);
+
+        } else {
+
+            return $param;
+
+        }
     }
 
 }
