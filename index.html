@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Php-quickdb by dnslv</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Php-quickdb</h1>
+      <h2 class="project-tagline">Fast And Elegant PHP PDO Database Manipulation Package</h2>
+      <a href="https://github.com/dnslv/PHP-QuickDB" class="btn">View on GitHub</a>
+      <a href="https://github.com/dnslv/PHP-QuickDB/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/dnslv/PHP-QuickDB/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="php-quickdb-qdb" class="anchor" href="#php-quickdb-qdb" aria-hidden="true"><span class="octicon octicon-link"></span></a>PHP QuickDB (qDB)</h1>
+
+<p>PHP Quick DB is fun and quick way to use PHP database.</p>
+
+<p>PHP Quick DB consists of three classes:</p>
+
+<ul>
+<li><b>PDOWrapper<b></b></b></li>
+<li><b>QueryBuilder<b></b></b></li>
+<li>
+<b>qDB</b> (Implementation Class)</li>
+</ul>
+
+<h2>
+<a id="uses" class="anchor" href="#uses" aria-hidden="true"><span class="octicon octicon-link"></span></a>Uses</h2>
+
+<ul>
+<li>CRUD operations</li>
+</ul>
+
+<p><em>!!! DOES NOT SUPPORT TABLE JOINING WHEN USING QUERYBUILDER !!!</em></p>
+
+<h2>
+<a id="basic-usage" class="anchor" href="#basic-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Basic Usage</h2>
+
+<pre><code>Include qDB.php in your project. If using autoloader, remove the class inclusions from qDB.php.
+</code></pre>
+
+<h3>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>EXAMPLES</h3>
+
+<h5>
+<a id="select" class="anchor" href="#select" aria-hidden="true"><span class="octicon octicon-link"></span></a>SELECT</h5>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    <span class="pl-c">#SQL: SELECT * FROM Person</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>select(<span class="pl-s"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">#SQL: SELECT * FROM Person WHERE `name` = 'John'</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>select(<span class="pl-s"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">#SQL: SELECT * FROM Person WHERE `name` LIKE '%ohn'</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>select(<span class="pl-s"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>LIKE<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>%ohn<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">#SQL: SELECT * FROM Person WHERE `name` = 'John' AND `age` = 45</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>select(<span class="pl-s"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>andWhere(<span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-c1">45</span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run()</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">   <span class="pl-c">#SQL: SELECT * FROM Person WHERE `membership` = 'user' OR `expires` &lt; NOW()</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>select(<span class="pl-s"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>membership<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>orWhere(<span class="pl-s"><span class="pl-pds">"</span>expires<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>&lt;<span class="pl-pds">"</span></span> , <span class="pl-s"><span class="pl-pds">"</span>NOW()<span class="pl-pds">"</span></span>, <span class="pl-c1">true</span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span></pre></div>
+
+<h5>
+<a id="insert" class="anchor" href="#insert" aria-hidden="true"><span class="octicon octicon-link"></span></a>INSERT</h5>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    <span class="pl-c">#SQL: INSERT INTO Person(`name`, `age`) VALUES('John',45)</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>insert([<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span><span class="pl-k">=&gt;</span><span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span><span class="pl-k">=&gt;</span><span class="pl-c1">45</span>])<span class="pl-k">-&gt;</span>run();</span></pre></div>
+
+<h5>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a>UPDATE</h5>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    <span class="pl-c">#SQL: UPDATE Person SET `name` = 'Nicole' WHERE `id` = 5</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>update(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Nicole<span class="pl-pds">"</span></span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-c1">5</span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">#SQL: UPDATE Person SET `name` = 'Nicole', `age` = '34' WHERE `id` = 10</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>update([<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>Nicole<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">34</span>])</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-c1">10</span>)</span>
+<span class="pl-s1">                                  <span class="pl-k">-&gt;</span>run();</span></pre></div>
+
+<h5>
+<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span class="octicon octicon-link"></span></a>DELETE</h5>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    <span class="pl-c">#SQL: DELETE FROM Persons WHERE `id` = 5</span></span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Table(<span class="pl-s"><span class="pl-pds">"</span>Person<span class="pl-pds">"</span></span>)<span class="pl-k">-&gt;</span>delete()<span class="pl-k">-&gt;</span>where(<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>=<span class="pl-pds">"</span></span>, <span class="pl-c1">5</span>)<span class="pl-k">-&gt;</span>run();</span></pre></div>
+
+<h5>
+<a id="use-without-querybuilder" class="anchor" href="#use-without-querybuilder" aria-hidden="true"><span class="octicon octicon-link"></span></a>Use without QueryBuilder</h5>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    <span class="pl-smi">$sql</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s1"><span class="pl-k">SELECT</span> <span class="pl-k">*</span> <span class="pl-k">FROM</span> Person <span class="pl-k">WHERE</span> <span class="pl-s">`name`</span> <span class="pl-k">=</span> :name <span class="pl-k">AND</span> <span class="pl-s">`age`</span> <span class="pl-k">=</span> :age</span><span class="pl-pds">"</span></span>;</span>
+<span class="pl-s1">    <span class="pl-smi">$params</span> <span class="pl-k">=</span> <span class="pl-c1">array</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span><span class="pl-k">=&gt;</span><span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span><span class="pl-k">=&gt;</span><span class="pl-c1">25</span>);</span>
+<span class="pl-s1">    <span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">qDB</span><span class="pl-k">::</span>Query(<span class="pl-smi">$sql</span>, <span class="pl-smi">$params</span>);</span></pre></div>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>LICENSE</h2>
+
+<p>MIT LICENSE</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/dnslv/PHP-QuickDB">Php-quickdb</a> is maintained by <a href="https://github.com/dnslv">dnslv</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
