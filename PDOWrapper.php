@@ -3,7 +3,7 @@
 /**
  * PDOWrapper Class
  *
- * @author  D.Nikolaev ((https://twitter.com/d3nislav)
+ * @author  D.Nikolaev (https://twitter.com/d3nislav)
  *
  * This class is simplified and modified version of PHP-MySQL-PDO-Database-Class by:
  *
@@ -56,20 +56,20 @@ class PDOWrapper
         $dsn = 'mysql:dbname=' . $this->settings["dbname"] . ';host=' . $this->settings["host"] . '';
         try {
             # Create instance of PDO; sets UTF8
-            $this->pdo = new PDO($dsn, $this->settings["user"], $this->settings["password"], array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            $this->pdo = new \PDO($dsn, $this->settings["user"], $this->settings["password"], array(\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
 
             # We can now log any exceptions on Fatal error.
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
             # Disable emulation of prepared statements, use REAL prepared statements instead.
-            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
             # Connection succeeded, set the boolean to true.
             $this->bConnected = true;
 
             return true;
 
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
 
             if ($this->isDebugMode) echo $e->getMessage();
 
@@ -124,16 +124,16 @@ class PDOWrapper
 
                     switch (true) {
                         case is_int($value):
-                            $type = PDO::PARAM_INT;
+                            $type = \PDO::PARAM_INT;
                             break;
                         case is_bool($value):
-                            $type = PDO::PARAM_BOOL;
+                            $type = \PDO::PARAM_BOOL;
                             break;
                         case is_null($value):
-                            $type = PDO::PARAM_NULL;
+                            $type = \PDO::PARAM_NULL;
                             break;
                         default:
-                            $type = PDO::PARAM_STR;
+                            $type = \PDO::PARAM_STR;
                     }
 
 
@@ -143,7 +143,7 @@ class PDOWrapper
             # Execute SQL
             $x = $this->sQuery->execute();
 
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
 
             if ($this->isDebugMode) echo $e->getMessage();
 
@@ -198,7 +198,7 @@ class PDOWrapper
      * @param  int $fetchmode
      * @return mixed
      */
-    public function query($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function query($query, $params = null, $fetchmode = \PDO::FETCH_ASSOC)
     {
         $query = trim($query);
 
