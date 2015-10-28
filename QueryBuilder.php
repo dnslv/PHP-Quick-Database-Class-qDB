@@ -529,7 +529,7 @@ class QueryBuilder
         $offset = "";
         if (!is_null($this->offset) and is_integer($this->offset)) {
 
-            $limit = "OFFSET " . $this->offset;
+            $offset = "OFFSET " . $this->offset;
 
         }
 

@@ -51,7 +51,7 @@ class PDOWrapper
      *    3. Tries to connect to the database.
      *    4. If connection failed, exception is displayed and a log file gets created.
      */
-    private function Connect()
+    public function Connect()
     {
         $dsn = 'mysql:dbname=' . $this->settings["dbname"] . ';host=' . $this->settings["host"] . '';
         try {
@@ -259,4 +259,14 @@ class PDOWrapper
         }
     }
 
+    #UnitTest Helpers
+    public function hasParam($param)
+    {
+        return array_key_exists($param, $this->parameters);
+    }
+
+    public function hasValue($value)
+    {
+        return in_array($value, $this->parameters);
+    }
 }
