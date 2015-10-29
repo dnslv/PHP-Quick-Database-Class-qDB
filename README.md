@@ -1,8 +1,8 @@
-# PHP QuickDB (qDB)
+# PHP Quick Database Class (qDB)
 
-PHP Quick DB is fun and quick way to use PHP database.
+PHP Quick Database Class is fun and quick way to use PHP database.
 
-PHP Quick DB consists of three classes:
+PHP Quick Database Class consists of three classes:
 
 - <b>PDOWrapper<b>
 - <b>QueryBuilder<b>
