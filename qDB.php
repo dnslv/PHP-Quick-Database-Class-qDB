@@ -22,16 +22,23 @@ class qDB
 
         if (is_null($qdb_instance)) {
 
-            $qdb_instance = new \QueryBuilder(
-                new \PDOWrapper(
-                    [
-                        "host" => "127.0.0.1",
-                        "dbname" => "r2",
-                        "user" => "root",
-                        "password" => ""
-                    ]
-                )
-            );
+            $dbc = parse_ini_file("database.ini.php");
+
+            if ($dbc) {
+
+                $qdb_instance = new \QueryBuilder(
+                    new \PDOWrapper(
+                        $dbc["driver"],
+                        [
+                            "host" => $dbc["host"],
+                            "dbname" => $dbc["dbname"],
+                            "user" => $dbc["user"],
+                            "password" => $dbc["password"]
+                        ]
+                    )
+                );
+            }
+
 
         }
 
@@ -50,9 +57,17 @@ class qDB
         return static::Instance()->table($db_table_name);
     }
 
-
+    /**
+     *
+     * Use to run your query directly
+     *
+     * @param $query
+     * @param array $param_binds
+     * @return mixed
+     */
     public static function Query($query, $param_binds = [])
     {
         return static::Instance()->pdoInstance()->query($query,$param_binds);
     }
 }
+

@@ -3,7 +3,7 @@
 /**
  * PDOWrapper Class
  *
- * @author  D.Nikolaev (https://twitter.com/d3nislav)
+ * @author  D.Nikolaev ((https://twitter.com/d3nislav)
  *
  * This class is simplified and modified version of PHP-MySQL-PDO-Database-Class by:
  *
@@ -18,7 +18,7 @@ class PDOWrapper
     private $pdo;
     # @object, PDO statement object
     private $sQuery;
-    # @array,  The database settings
+    # @mixed,  The database settings
     private $settings;
     # @bool ,  Connected to the database
     private $bConnected = false;
@@ -26,7 +26,8 @@ class PDOWrapper
     private $parameters = array();
     # @bool,  The class is used in debug mode
     private $isDebugMode = true;
-    #
+
+    private $driver = null;
 
     /**
      *   Default Constructor
@@ -34,12 +35,28 @@ class PDOWrapper
      *    1. Instantiate Log class.
      *    2. Connect to database.
      *    3. Creates the parameter array.
+     *
+     * @param $driver
      * @param $settings
+     * @throws \Exception
      */
-    public function __construct($settings)
+    public function __construct($driver, $settings)
     {
-        $this->settings = $settings;
-        $this->Connect();
+        try {
+            if ($this->isValidDriver($driver)) {
+                $this->driver = $driver;
+            } else {
+                if ($this->isDebugMode) throw new \Exception("Provided driver name was not found");
+            }
+            $this->settings = $settings;
+
+            $this->connect();
+        } catch (\Exception $e) {
+
+            if ($this->isDebugMode) echo $e->getMessage() . "\n";
+
+
+        }
 
     }
 
@@ -51,27 +68,35 @@ class PDOWrapper
      *    3. Tries to connect to the database.
      *    4. If connection failed, exception is displayed and a log file gets created.
      */
-    public function Connect()
+    public function connect()
     {
-        $dsn = 'mysql:dbname=' . $this->settings["dbname"] . ';host=' . $this->settings["host"] . '';
+
         try {
-            # Create instance of PDO; sets UTF8
-            $this->pdo = new \PDO($dsn, $this->settings["user"], $this->settings["password"], array(\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            # Create instance of PDO
+            $this->pdo = $this->getPDOInstance();
 
-            # We can now log any exceptions on Fatal error.
-            $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            if (is_object($this->pdo)) {
+                # We can now log any exceptions on Fatal error.
+                $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-            # Disable emulation of prepared statements, use REAL prepared statements instead.
-            $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+                # Disable emulation of prepared statements, use REAL prepared statements instead.
+                $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
-            # Connection succeeded, set the boolean to true.
-            $this->bConnected = true;
+                # Connection succeeded, set the boolean to true.
+                $this->bConnected = true;
 
-            return true;
+                return true;
+
+            } else {
+
+                throw new \PDOException("PDO instance was not created");
+
+            }
+
 
         } catch (\PDOException $e) {
 
-            if ($this->isDebugMode) echo $e->getMessage();
+            if ($this->isDebugMode) echo $e->getMessage() . "\n";
 
             return false;
         }
@@ -81,7 +106,7 @@ class PDOWrapper
      *   You can use this little method if you want to close the PDO connection
      *
      */
-    public function CloseConnection()
+    public function closeConnection()
     {
         # Set the PDO object to null to close the connection
         # http://www.php.net/manual/en/pdo.connections.php
@@ -98,7 +123,7 @@ class PDOWrapper
      *    5. On exception : Write Exception into the log + SQL query.
      *    6. Reset the Parameters.
      */
-    private function Execute($query, $parameters = null)
+    private function execute($query, $parameters = null)
     {
         # Connect to database
         if (!$this->bConnected) {
@@ -219,8 +244,6 @@ class PDOWrapper
 
         } elseif ($statement === 'insert' || $statement === 'update' || $statement === 'delete') {
 
-            //return $this->sQuery->rowCount();
-
             return true;
 
         } else {
@@ -259,14 +282,50 @@ class PDOWrapper
         }
     }
 
-    #UnitTest Helpers
-    public function hasParam($param)
+    /**
+     *
+     * @param $driver
+     * @return bool
+     */
+    private function isValidDriver($driver)
     {
-        return array_key_exists($param, $this->parameters);
+        $supported_drivers = array("sqlite", "mysql");
+
+        return in_array(strtolower($driver), $supported_drivers);
     }
+
+
+    private function getPDOInstance()
+    {
+        #SQLite
+        if ($this->driver === "sqlite") {
+            if (is_string($this->settings) and file_exists($this->settings)) {
+                return new \PDO("sqlite:" . $this->settings);
+            }
+            #mySQL
+        } elseif ($this->driver === "mysql") {
+            if (isset($this->settings["dbname"]) &&
+                isset($this->settings["host"]) &&
+                isset($this->settings["user"]) &&
+                isset($this->settings["password"])
+            ) {
+
+                $dsn = 'mysql:dbname=' . $this->settings["dbname"] . ';host=' . $this->settings["host"] . '';
+                return new \PDO($dsn, $this->settings["user"], $this->settings["password"], array(\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            }
+        }
+        return false;
+    }
+
+    #For Unit testing purposes only
 
     public function hasValue($value)
     {
         return in_array($value, $this->parameters);
+    }
+
+    public function hasParam($param)
+    {
+        return array_key_exists($param, $this->parameters);
     }
 }

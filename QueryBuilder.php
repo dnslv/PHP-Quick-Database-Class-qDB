@@ -33,8 +33,14 @@ class QueryBuilder
     #Arrange results by direction (ASC, DESC)
     private $order_by_dir = null;
 
-    #Database fields to work with
-    private $fields = null;
+    #Group by
+    private $group_by = null;
+
+    #Join tables
+    private $join = array();
+
+    #Database columns to work with
+    private $columns = null;
 
     #Bind parameters for insertion
     private $inserts = null;
@@ -44,6 +50,8 @@ class QueryBuilder
 
     #Set to true via allowMultiple() method to be able to affect more than one record when UPDATING or DELETING
     private $allow_multiple = null;
+
+    private $calc_total_rows = null;
 
     #an instance of class PDOWrapper
     private $pdo = null;
@@ -88,12 +96,13 @@ class QueryBuilder
     #BASIC CRUD OPERATIONS
 
     /**
-     * Sets SELECT action. You can pass "*" for all or comma separated fields
+     * Sets SELECT action. You can pass "*" for all or comma separated columns
      * the same way as you would do it in a SQL query
      *
      * @param string $select_what
      * @param bool|false $is_distinct
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function select($select_what = "*", $is_distinct = false)
     {
@@ -111,7 +120,16 @@ class QueryBuilder
         #Check select_what
         if (is_string($select_what)) {
 
-            $this->fields = $select_what;
+            $this->columns = $select_what;
+
+        } elseif (is_array($select_what)) {
+
+            $aggr = null;
+            foreach ($select_what as $column) {
+                $aggr .= $column . ",";
+            }
+
+            $this->columns = substr($aggr, 0, strlen($aggr) - 1);
 
         } else {
 
@@ -124,8 +142,95 @@ class QueryBuilder
     }
 
     /**
+     * Runs SELECT EXISTS
+     *
+     * @param $column
+     * @param null $value
+     * @return $this
+     */
+    public function exists($column, $value = null)
+    {
+        $this->action = "SELECT EXISTS";
+
+        if (is_string($column) && !is_null($value)) {
+
+            $param = $this->prepParam($column);
+            $this->columns = "(SELECT * FROM %s WHERE `" . $column . "` = :" . $param . ")";
+            $this->bind[$param] = $value;
+
+        }
+
+        if (is_array($column) && is_null($value)) {
+
+            $aggr_columns = "";
+
+            foreach ($column as $clmn => $with_value) {
+
+                $param = $this->prepParam($clmn);
+
+                $aggr_columns .= "`" . $clmn . "`= :" . $param . " AND ";
+
+                $this->bind[$param] = $with_value;
+
+            }
+
+            $aggr_columns = substr(trim($aggr_columns), 0, strlen($aggr_columns) - 5);
+
+            $this->columns = "(SELECT * FROM %s WHERE " . $aggr_columns . ")";
+
+        }
+
+
+        return $this;
+    }
+
+    /**
+     * Joins two tables.
+     *
+     * @param $left_table
+     * @param $right_table
+     * @param $left_table_column
+     * @param $right_table_column
+     * @param string $join_type
+     * @return $this
+     */
+    public function join($left_table, $right_table, $left_table_column, $right_table_column, $join_type = "INNER")
+    {
+
+        $join["left_table"] = $left_table;
+
+        $join["right_table"] = $right_table;
+
+        $join["left_table_column"] = $left_table_column;
+
+        $join["right_table_column"] = $right_table_column;
+
+        $types = ["INNER", "OUTER LEFT", "LEFT", "OUTER RIGHT", "RIGHT", "OUTER FULL", "SELF", "CROSS"];
+
+        if (in_array(strtoupper($join_type), $types)) {
+
+            $join["type"] = strtoupper($join_type) . " JOIN";
+
+        } else {
+
+            $join["type"] = "JOIN";
+
+        }
+
+        $this->join[] = $join;
+
+        if (is_null($this->action)) {
+            $this->select();
+        }
+
+        return $this;
+
+    }
+
+
+    /**
      * Sets INSERT action. As parameter accepts an array with keys corresponding to
-     * database fields and values to be inserted in this fields
+     * database columns and values to be inserted in this columns
      *
      * @param $insert_array
      * @return $this
@@ -138,16 +243,16 @@ class QueryBuilder
 
             foreach ($insert_array as $para => $val) {
 
-                $this->fields .= $para . ", ";
+                $this->columns .= $para . ", ";
                 $this->inserts .= ":" . $para . ", ";
                 $this->bind[$para] = $val;
 
             }
         }
 
-        $this->fields = trim($this->fields);
+        $this->columns = trim($this->columns);
 
-        $this->fields = substr($this->fields, 0, strlen($this->fields) - 1);
+        $this->columns = substr($this->columns, 0, strlen($this->columns) - 1);
 
         $this->inserts = trim($this->inserts);
 
@@ -160,7 +265,7 @@ class QueryBuilder
     /**
      * Sets UPDATE action. You can pass a database field as string and set the second parameter
      * to value different than null, if you want to update single field in a table. If you pass an array
-     * with keys corresponding to database fields and with values to be updated, and the second parameter
+     * with keys corresponding to database columns and with values to be updated, and the second parameter
      * should not be set or set to null. Use this case if you have to update more than one field in a table.
      *
      * @param $update_what
@@ -176,7 +281,7 @@ class QueryBuilder
 
             $param = $this->prepParam($update_what);
 
-            $this->fields = "`" . $update_what . "`= :" . $param;
+            $this->columns = "`" . $update_what . "`= :" . $param;
 
             $this->bind[$param] = $value;
 
@@ -185,21 +290,21 @@ class QueryBuilder
         #MULTIPLE DATABASE FIELDS UPDATE
         if (is_array($update_what) && is_null($value)) {
 
-            $aggr_fields = "";
+            $aggr_columns = "";
 
             foreach ($update_what as $update => $with_value) {
 
                 $param = $this->prepParam($update);
 
-                $aggr_fields .= "`" . $update . "`= :" . $param . ", ";
+                $aggr_columns .= "`" . $update . "`= :" . $param . ", ";
 
                 $this->bind[$param] = $with_value;
 
             }
 
-            $aggr_fields = trim($aggr_fields);
+            $aggr_columns = trim($aggr_columns);
 
-            $this->fields = substr($aggr_fields, 0, strlen($aggr_fields) - 1);
+            $this->columns = substr($aggr_columns, 0, strlen($aggr_columns) - 1);
 
         }
 
@@ -215,7 +320,7 @@ class QueryBuilder
     {
         $this->action = "DELETE";
 
-        $this->fields = "";
+        $this->columns = "";
 
         return $this;
 
@@ -327,11 +432,17 @@ class QueryBuilder
      * @param $int_limit
      * @return $this
      */
-    public function limit($int_limit)
+    public function limit($int_limit, $calc_total_rows = false)
     {
         if (is_integer($int_limit)) {
 
             $this->limit = (integer)$int_limit;
+
+            if ($calc_total_rows) {
+
+                $this->calc_total_rows = "SQL_CALC_FOUND_ROWS";
+
+            }
 
         }
 
@@ -392,6 +503,13 @@ class QueryBuilder
 
     }
 
+    public function groupBy($column)
+    {
+        $this->group_by = $column;
+
+        return $this;
+    }
+
     /**
      * Allows for multiple records to be affected if UPDATE or DELETE is executed.
      * By default, there is a limit of 1 record to be affected.
@@ -421,6 +539,7 @@ class QueryBuilder
         return $r;
     }
 
+
     /**
      * Executes a built query and returns the results or false if unsuccessful.
      *
@@ -432,15 +551,29 @@ class QueryBuilder
 
             $r = $this->pdo->query($sql, $this->bind);
 
-            $this->reset();
+            if ($this->limit === 1 && $this->action === "SELECT" && count($r) == 1) {
 
-            return $r;
+                $rtn = $r[0];
+
+            } elseif ($this->action === "SELECT EXISTS" && count($r) == 1) {
+
+                $key = array_keys($r[0]);
+                $rtn = boolval($r[0][$key[0]]);
+
+            } else {
+
+                $rtn = $r;
+
+            }
 
         } else {
 
-            return false;
+            $rtn = false;
 
         }
+
+        $this->reset();
+        return $rtn;
     }
 
     public function pdoInstance()
@@ -471,9 +604,9 @@ class QueryBuilder
         }
 
 
-        if (!is_null($this->fields)) {
+        if (!is_null($this->columns)) {
 
-            $fields = $this->fields;
+            $columns = $this->columns;
 
         } else {
 
@@ -502,13 +635,17 @@ class QueryBuilder
                 $and_or_where = trim($and_or_where);
 
             }
+            //Rescue if where is not set but there is AND or OR clause
+            if (empty($where) and !empty($and_or_where)) {
+                $and_or_where = "WHERE " . trim(substr($and_or_where, 3));
+            }
 
         }
 
         $order_by = "";
         if (!is_null($this->order_by)) {
 
-            $order_by = $this->order_by;
+            $order_by = "ORDER BY " . $this->order_by;
 
         }
 
@@ -516,6 +653,13 @@ class QueryBuilder
         if (!is_null($this->order_by_dir)) {
 
             $order_by_dir = $this->order_by_dir;
+
+        }
+
+        $group_by = "";
+        if (!is_null($this->group_by)) {
+
+            $order_by_dir = "GROUP BY " . $this->group_by;
 
         }
 
@@ -536,11 +680,50 @@ class QueryBuilder
 
         if (!is_null($this->action)) {
 
-            if ($this->action === "SELECT") {
+            if ($this->isJoinable()) {
 
                 $action = $this->action;
 
-                return trim(sprintf("%s %s FROM %s %s %s %s %s %s %s", $action, $fields, $table, $where, $and_or_where, $order_by, $order_by_dir, $limit, $offset));
+                $join_string = "";
+
+                foreach ($this->join as $join) {
+
+                    $join_string .= sprintf(" %s %s ON %s = %s",
+                        $join["type"],
+                        $join["right_table"],
+                        $join["left_table"] . "." . $join["left_table_column"],
+                        $join["right_table"] . "." . $join["right_table_column"]
+                    );
+
+                }
+
+                return trim(sprintf("%s %s FROM %s %s %s %s %s %s %s %s %s",
+                    $action,
+                    $columns,
+                    $table,
+                    $join_string,
+                    $where,
+                    $and_or_where,
+                    $order_by,
+                    $order_by_dir,
+                    $limit,
+                    $offset,
+                    $group_by
+                ));
+
+
+                //return print_r($this->join, true);
+
+            } elseif ($this->action === "SELECT" || $this->action === "SELECT DISTINCT") {
+
+                $action = $this->action;
+
+                $calc = "";
+                if (!empty($this->calc_total_rows)) {
+                    $calc = $this->calc_total_rows;
+                }
+
+                return trim(sprintf("%s %s %s FROM %s %s %s %s %s %s %s", $action, $calc, $columns, $table, $where, $and_or_where, $order_by, $order_by_dir, $limit, $offset));
 
             } elseif ($this->action === "UPDATE") {
 
@@ -552,7 +735,7 @@ class QueryBuilder
 
                 }
 
-                return trim(sprintf("%s %s SET %s %s %s %s", $action, $table, $fields, $where, $and_or_where, $limit));
+                return trim(sprintf("%s %s SET %s %s %s %s", $action, $table, $columns, $where, $and_or_where, $limit));
 
             } elseif ($this->action === "DELETE" && !empty($where)) {
 
@@ -564,7 +747,7 @@ class QueryBuilder
 
                 }
 
-                return trim(sprintf("%s FROM %s %s %s %s %s", $action, $table, $fields, $where, $and_or_where, $limit));
+                return trim(sprintf("%s FROM %s %s %s %s %s", $action, $table, $columns, $where, $and_or_where, $limit));
 
             } elseif ($this->action === "INSERT") {
 
@@ -575,8 +758,14 @@ class QueryBuilder
                     return false;
                 }
 
-                return trim(sprintf("%s INTO %s(%s) VALUES(%s)", $action, $table, $fields, $this->inserts));
+                return trim(sprintf("%s INTO %s(%s) VALUES(%s)", $action, $table, $columns, $this->inserts));
 
+
+            } elseif ($this->action === "SELECT EXISTS") {
+
+                $action = $this->action;
+
+                return trim(sprintf($action . $columns, $table));
 
             }
         }
@@ -629,5 +818,19 @@ class QueryBuilder
             return $param;
 
         }
+    }
+
+    /**
+     * @return bool
+     */
+    private function isJoinable()
+    {
+
+        if (empty($this->join)) {
+            return false;
+        }
+        return true;
+
+
     }
 }
